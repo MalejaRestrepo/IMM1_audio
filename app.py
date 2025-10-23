@@ -2,29 +2,32 @@ import streamlit as st
 import os
 import time
 import glob
+import cv2
+import numpy as np
+import pytesseract
+from PIL import Image
 from gtts import gTTS
-from PIL import Image, ExifTags
-import base64
+from deep_translator import GoogleTranslator
 
 # CONFIGURACIÓN GENERAL
 st.set_page_config(
-    page_title="Texto a Audio",
-    page_icon="🎵",
+    page_title="OCR y Traducción con Audio",
+    page_icon="🎧",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# ESTILOS ACTUALIZADOS (lavanda/violeta con barra superior personalizada)
+# 🎨 ESTILOS VISUALES — PALETA LAVANDA/VIOLETA
 st.markdown("""
     <style>
-    /* Fondo general */
+    /* Fondo principal */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(180deg, #e8dcff 0%, #d7c4ff 100%);
         color: #22143d;
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Card central */
+    /* Contenedor principal */
     .block-container {
         background: #faf7ff;
         border: 1px solid #cbb3ff;
@@ -40,8 +43,7 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Párrafos y etiquetas */
-    p, li, label {
+    p, label, span, div, li {
         color: #22143d;
     }
 
@@ -55,7 +57,7 @@ st.markdown("""
         color: #2a1d5c !important;
     }
 
-    /* Botón */
+    /* Botones */
     div.stButton > button {
         background-color: #8b6aff;
         color: #ffffff;
@@ -67,40 +69,59 @@ st.markdown("""
         padding: 9px 24px;
         transition: all 0.2s ease;
     }
+
     div.stButton > button:hover {
         background-color: #6f51ea;
         transform: translateY(-1px);
     }
 
     /* Inputs */
-    textarea, .stTextInput input {
+    textarea, input, select {
         background-color: #ffffff !important;
         color: #22143d !important;
         border-radius: 10px !important;
         border: 1px solid #bda5ff !important;
     }
-    textarea::placeholder, .stTextInput input::placeholder {
+
+    textarea::placeholder, input::placeholder {
         color: #6b5a8e !important;
     }
+
     div[data-baseweb="select"] {
         background-color: #ffffff !important;
         color: #22143d !important;
         border-radius: 10px !important;
         border: 1px solid #bda5ff !important;
     }
+
     div[data-baseweb="select"] * {
         color: #22143d !important;
     }
 
-    /* Enlaces */
-    a {
-        color: #5a3ccf;
-        font-weight: 600;
-        text-decoration: none;
-        border-bottom: 1px dotted #5a3ccf;
+    /* File uploader */
+    [data-testid="stFileUploader"] div {
+        background-color: #3a2d61 !important;
+        border-radius: 12px;
     }
-    a:hover {
-        color: #3f2aa0;
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] span {
+        color: #ffffff !important;
+    }
+    [data-testid="stFileUploader"] button {
+        background-color: #8b6aff !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-radius: 8px;
+        border: 1px solid #6f51ea !important;
+        transition: all 0.2s ease;
+    }
+    [data-testid="stFileUploader"] button:hover {
+        background-color: #6f51ea !important;
+    }
+
+    /* Checkbox */
+    div[data-baseweb="checkbox"] label {
+        color: #22143d !important;
     }
 
     /* Reproductor de audio */
@@ -109,7 +130,7 @@ st.markdown("""
         border: 2px solid #b48aff;
     }
 
-    /* BARRA SUPERIOR de Streamlit */
+    /* Barra superior Streamlit */
     [data-testid="stHeader"] {
         background: linear-gradient(90deg, #5a3ccf 0%, #7b59e3 100%) !important;
         color: white !important;
@@ -122,91 +143,31 @@ st.markdown("""
         top: 0.5rem;
         color: white !important;
     }
+
+    .stAlert p {
+        color: #22143d !important;
+    }
+
+    .stSuccess, .stInfo {
+        color: #22143d !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# TÍTULO PRINCIPAL
-st.title("Convierte Texto en Audio")
+# FUNCIONES AUXILIARES
+def traducir_texto(text, src, dest):
+    return GoogleTranslator(source=src, target=dest).translate(text)
 
-# IMAGEN PRINCIPAL
-image = Image.open('cinna2.jpeg')
-try:
-    for orientation in ExifTags.TAGS.keys():
-        if ExifTags.TAGS[orientation] == 'Orientation':
-            break
-    exif = dict(image._getexif().items())
-    if exif[orientation] == 3:
-        image = image.rotate(180, expand=True)
-    elif exif[orientation] == 6:
-        image = image.rotate(270, expand=True)
-    elif exif[orientation] == 8:
-        image = image.rotate(90, expand=True)
-except (AttributeError, KeyError, IndexError):
-    pass
-
-st.image(image, width=320, caption="Genera tu voz desde texto")
-
-# SIDEBAR
-with st.sidebar:
-    st.header("Instrucciones")
-    st.write("1️⃣ Escribe o pega un texto que quieras escuchar.\n\n2️⃣ Elige el idioma.\n\n3️⃣ Haz clic en Convertir a Audio y descarga tu archivo MP3.")
-
-# CREAR CARPETA TEMPORAL
-try:
-    os.mkdir("temp")
-except:
-    pass
-
-# TEXTO DE EJEMPLO
-st.markdown("### Ejemplo de texto:")
-st.write("""You shine so bright, like city lights,
-Every word you say feels right.
-Let the music play, don't say goodbye,
-My heart’s alive when you’re nearby.""")
-
-# ÁREA DE TEXTO
-st.markdown("### Escribe tu texto para convertir en audio:")
-text = st.text_area("Ingresa aquí el texto que deseas escuchar:")
-
-# SELECCIÓN DE IDIOMA
-option_lang = st.selectbox("Selecciona el idioma:", ("Español", "Inglés"))
-lg = 'es' if option_lang == "Español" else 'en'
-tld = 'com'
-
-# FUNCIÓN DE CONVERSIÓN
-def text_to_speech(text, tld, lg):
-    tts = gTTS(text, lang=lg)
-    try:
-        my_file_name = text[0:20]
-    except:
-        my_file_name = "audio"
+def text_to_speech(input_language, output_language, text, tld):
+    trans_text = traducir_texto(text, input_language, output_language)
+    tts = gTTS(trans_text, lang=output_language, tld=tld, slow=False)
+    my_file_name = text[0:20] if text.strip() else "audio"
     tts.save(f"temp/{my_file_name}.mp3")
-    return my_file_name, text
+    return my_file_name, trans_text
 
-# BOTÓN PARA CONVERTIR
-if st.button("Convertir a Audio"):
-    if text.strip() == "":
-        st.warning("Escribe algo antes de convertir.")
-    else:
-        result, output_text = text_to_speech(text, tld, lg)
-        audio_file = open(f"temp/{result}.mp3", "rb")
-        audio_bytes = audio_file.read()
-
-        st.markdown("## Tu audio listo:")
-        st.audio(audio_bytes, format="audio/mp3", start_time=0)
-
-        # DESCARGA DEL AUDIO
-        with open(f"temp/{result}.mp3", "rb") as f:
-            data = f.read()
-
-        bin_str = base64.b64encode(data).decode()
-        href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(result)}.mp3">Descargar tu audio</a>'
-        st.markdown(href, unsafe_allow_html=True)
-
-# LIMPIEZA DE ARCHIVOS TEMPORALES
 def remove_files(n):
-    mp3_files = glob.glob("temp/*.mp3")
-    if len(mp3_files) != 0:
+    mp3_files = glob.glob("temp/*mp3")
+    if mp3_files:
         now = time.time()
         n_days = n * 86400
         for f in mp3_files:
@@ -214,3 +175,106 @@ def remove_files(n):
                 os.remove(f)
 
 remove_files(7)
+
+# INTERFAZ PRINCIPAL
+st.title("Reconocimiento Óptico de Caracteres (OCR)")
+st.subheader("Convierte texto desde imágenes, tradúcelo y genera audio fácilmente.")
+
+cam_ = st.checkbox("Usar cámara")
+
+if cam_:
+    img_file_buffer = st.camera_input("Toma una foto")
+else:
+    img_file_buffer = None
+
+with st.sidebar:
+    st.subheader("Procesamiento de Imagen")
+    filtro = st.radio("Aplicar filtro a la imagen de cámara", ('Sí', 'No'))
+
+# SUBIDA DE IMAGEN
+bg_image = st.file_uploader("Cargar una imagen:", type=["png", "jpg", "jpeg"])
+if bg_image is not None:
+    uploaded_file = bg_image
+    st.image(uploaded_file, caption='Imagen cargada', use_container_width=True)
+
+    with open(uploaded_file.name, 'wb') as f:
+        f.write(uploaded_file.read())
+
+    img_cv = cv2.imread(uploaded_file.name)
+    img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+    text = pytesseract.image_to_string(img_rgb)
+    st.write("Texto detectado en la imagen:")
+    st.success(text)
+
+# CAPTURA DESDE CÁMARA
+if img_file_buffer is not None:
+    bytes_data = img_file_buffer.getvalue()
+    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+
+    if filtro == 'Sí':
+        cv2_img = cv2.bitwise_not(cv2_img)
+
+    img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+    text = pytesseract.image_to_string(img_rgb)
+    st.write("Texto detectado:")
+    st.success(text)
+
+# PANEL DE TRADUCCIÓN Y AUDIO
+with st.sidebar:
+    st.subheader("Parámetros de Traducción y Audio")
+
+    try:
+        os.mkdir("temp")
+    except:
+        pass
+
+    in_lang = st.selectbox(
+        "Lenguaje de entrada",
+        ("Inglés", "Español", "Coreano", "Mandarín", "Japonés"),
+    )
+    lang_map = {
+        "Inglés": "en",
+        "Español": "es",
+        "Coreano": "ko",
+        "Mandarín": "zh-cn",
+        "Japonés": "ja"
+    }
+    input_language = lang_map.get(in_lang, "en")
+
+    out_lang = st.selectbox(
+        "Lenguaje de salida",
+        ("Español", "Inglés", "Coreano", "Mandarín", "Japonés"),
+    )
+    output_language = lang_map.get(out_lang, "es")
+
+    accent = st.selectbox(
+        "Acento",
+        ("Defecto", "Reino Unido", "Estados Unidos", "Australia", "Irlanda", "Sudáfrica", "España"),
+    )
+    tld_map = {
+        "Defecto": "com",
+        "Reino Unido": "co.uk",
+        "Estados Unidos": "com",
+        "Australia": "com.au",
+        "Irlanda": "ie",
+        "Sudáfrica": "co.za",
+        "España": "es"
+    }
+    tld = tld_map.get(accent, "com")
+
+    display_output_text = st.checkbox("Mostrar texto traducido")
+
+    if st.button("Convertir a Audio"):
+        if text.strip() == "":
+            st.warning("Primero detecta o carga una imagen con texto.")
+        else:
+            result, output_text = text_to_speech(input_language, output_language, text, tld)
+            with open(f"temp/{result}.mp3", "rb") as audio_file:
+                audio_bytes = audio_file.read()
+
+            st.markdown("## Audio generado:")
+            st.audio(audio_bytes, format="audio/mp3", start_time=0)
+
+            if display_output_text:
+                st.markdown("## Texto traducido:")
+                st.info(output_text)
