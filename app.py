@@ -1,33 +1,30 @@
-import os
 import streamlit as st
-from bokeh.models.widgets import Button
-from bokeh.models import CustomJS
-from streamlit_bokeh_events import streamlit_bokeh_events
-from PIL import Image
+import os
 import time
 import glob
 from gtts import gTTS
-from googletrans import Translator
+from PIL import Image, ExifTags
+import base64
 
-# CONFIGURACIÓN DE PÁGINA
+# CONFIGURACIÓN GENERAL
 st.set_page_config(
-    page_title="Traductor de Voz",
-    page_icon="🎧",
+    page_title="Texto a Audio",
+    page_icon="🎵",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# 🎨 ESTILOS VISUALES — coherentes con OCR y Texto a Audio
+# 🎨 ESTILOS ACTUALIZADOS (paleta lavanda-celeste del OCR + contraste correcto)
 st.markdown("""
     <style>
-    /* Fondo principal */
+    /* Fondo general */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(180deg, #e6e4ff 0%, #d9f4ff 100%);
         color: #1f244b;
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Contenedor principal */
+    /* Card central */
     .block-container {
         background: #f9faff;
         border: 1px solid #c0d3ff;
@@ -43,7 +40,8 @@ st.markdown("""
         font-weight: 700;
     }
 
-    p, label, span, div {
+    /* Textos generales */
+    p, li, label, span, div {
         color: #1f244b;
     }
 
@@ -57,25 +55,35 @@ st.markdown("""
         color: #1e1c3a !important;
     }
 
-    /* Botones */
-    div.stButton > button, .bk-root .bk-btn {
-        background: linear-gradient(90deg, #b9a6ff 0%, #9be4ff 100%) !important;
-        color: #1f244b !important;
-        font-weight: 700 !important;
-        border-radius: 10px !important;
-        border: 1px solid #9fcaff !important;
-        box-shadow: 0 6px 14px rgba(31, 36, 75, 0.18) !important;
-        font-size: 16px !important;
-        padding: 9px 24px !important;
-        transition: all 0.2s ease !important;
+    /* Botón principal */
+    div.stButton > button {
+        background: linear-gradient(90deg, #b9a6ff 0%, #9be4ff 100%);
+        color: #1f244b;
+        font-weight: 700;
+        border-radius: 10px;
+        border: 1px solid #9fcaff;
+        box-shadow: 0 6px 14px rgba(31, 36, 75, 0.18);
+        font-size: 16px;
+        padding: 9px 24px;
+        transition: all 0.2s ease;
     }
-
-    div.stButton > button:hover, .bk-root .bk-btn:hover {
-        background: linear-gradient(90deg, #a694ff 0%, #8fd8ff 100%) !important;
+    div.stButton > button:hover {
+        background: linear-gradient(90deg, #a694ff 0%, #8fd8ff 100%);
         transform: translateY(-1px);
     }
 
-    /* Selects oscuros */
+    /* Inputs y selects claros */
+    textarea, .stTextInput input {
+        background-color: #ffffff !important;
+        color: #1f244b !important;
+        border-radius: 10px !important;
+        border: 1px solid #a8c7ff !important;
+    }
+    textarea::placeholder, .stTextInput input::placeholder {
+        color: #6b7a9e !important;
+    }
+
+    /* --- ÁREAS OSCURAS (SELECTS / FILE UPLOADER) --- */
     div[data-baseweb="select"] {
         background-color: #2b2b33 !important;
         color: #ffffff !important;
@@ -86,12 +94,28 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Checkboxes */
-    div[data-baseweb="checkbox"] label {
-        color: #1f244b !important;
+    [data-testid="stFileUploader"] div {
+        background-color: #2b2b33 !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] span,
+    [data-testid="stFileUploader"] button {
+        color: #ffffff !important;
     }
 
-    /* Audio player */
+    /* Enlaces */
+    a {
+        color: #3a73e3;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px dotted #3a73e3;
+    }
+    a:hover {
+        color: #2c57b5;
+    }
+
+    /* Reproductor de audio */
     audio {
         border-radius: 10px;
         border: 2px solid #8db8ff;
@@ -113,112 +137,92 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ENCABEZADO PRINCIPAL
-st.title("🎙️ Traductor de Voz")
-st.subheader("Escucho lo que dices, lo traduzco y te lo leo en voz alta.")
+# TÍTULO PRINCIPAL
+st.title("Convierte Texto en Audio")
 
 # IMAGEN PRINCIPAL
-if os.path.exists("OIG7.jpg"):
-    image = Image.open("OIG7.jpg")
-    st.image(image, width=320)
-else:
-    st.info("Sube una imagen decorativa llamada **OIG7.jpg** para personalizar el diseño.")
+image = Image.open('cinna2.jpeg')
+try:
+    for orientation in ExifTags.TAGS.keys():
+        if ExifTags.TAGS[orientation] == 'Orientation':
+            break
+    exif = dict(image._getexif().items())
+    if exif[orientation] == 3:
+        image = image.rotate(180, expand=True)
+    elif exif[orientation] == 6:
+        image = image.rotate(270, expand=True)
+    elif exif[orientation] == 8:
+        image = image.rotate(90, expand=True)
+except (AttributeError, KeyError, IndexError):
+    pass
+
+st.image(image, width=320, caption="Genera tu voz desde texto")
 
 # SIDEBAR
 with st.sidebar:
-    st.subheader("🪄 Instrucciones")
-    st.write("Presiona el botón de **Escuchar**, habla lo que quieras traducir y luego selecciona el idioma de entrada, salida y acento para generar el audio traducido.")
+    st.header("Instrucciones")
+    st.write("1️⃣ Escribe o pega un texto que quieras escuchar.\n\n2️⃣ Elige el idioma.\n\n3️⃣ Haz clic en Convertir a Audio y descarga tu archivo MP3.")
 
-# BOTÓN DE ESCUCHA
-st.markdown("### 🎧 Pulsa el botón y habla lo que quieras traducir")
-stt_button = Button(label="🎤 Escuchar", width=300, height=50)
+# CREAR CARPETA TEMPORAL
+try:
+    os.mkdir("temp")
+except:
+    pass
 
-stt_button.js_on_event("button_click", CustomJS(code="""
-    var recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
+# TEXTO DE EJEMPLO
+st.markdown("### Ejemplo de texto:")
+st.write("""You shine so bright, like city lights,
+Every word you say feels right.
+Let the music play, don't say goodbye,
+My heart’s alive when you’re nearby.""")
 
-    recognition.onresult = function (e) {
-        var value = "";
-        for (var i = e.resultIndex; i < e.results.length; ++i) {
-            if (e.results[i].isFinal) {
-                value += e.results[i][0].transcript;
-            }
-        }
-        if (value != "") {
-            document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: value}));
-        }
-    }
-    recognition.start();
-"""))
+# ÁREA DE TEXTO
+st.markdown("### Escribe tu texto para convertir en audio:")
+text = st.text_area("Ingresa aquí el texto que deseas escuchar:")
 
-result = streamlit_bokeh_events(
-    stt_button,
-    events="GET_TEXT",
-    key="listen",
-    refresh_on_update=False,
-    override_height=75,
-    debounce_time=0
-)
+# SELECCIÓN DE IDIOMA
+option_lang = st.selectbox("Selecciona el idioma:", ("Español", "Inglés"))
+lg = 'es' if option_lang == "Español" else 'en'
+tld = 'com'
 
-# PROCESO DE TRADUCCIÓN
-if result and "GET_TEXT" in result:
-    st.markdown("### 📝 Texto detectado:")
-    st.success(result.get("GET_TEXT"))
-
+# FUNCIÓN DE CONVERSIÓN
+def text_to_speech(text, tld, lg):
+    tts = gTTS(text, lang=lg)
     try:
-        os.mkdir("temp")
+        my_file_name = text[0:20]
     except:
-        pass
+        my_file_name = "audio"
+    tts.save(f"temp/{my_file_name}.mp3")
+    return my_file_name, text
 
-    translator = Translator()
-    text = str(result.get("GET_TEXT"))
-
-    st.markdown("### 🌐 Configuración de traducción")
-    in_lang = st.selectbox("Lenguaje de entrada", ("Inglés", "Español", "Coreano", "Mandarín", "Japonés"))
-    out_lang = st.selectbox("Lenguaje de salida", ("Español", "Inglés", "Coreano", "Mandarín", "Japonés"))
-    accent = st.selectbox("Acento", ("Defecto", "Reino Unido", "Estados Unidos", "Australia", "Irlanda", "Sudáfrica", "España"))
-
-    lang_map = {
-        "Inglés": "en", "Español": "es", "Coreano": "ko",
-        "Mandarín": "zh-cn", "Japonés": "ja"
-    }
-    tld_map = {
-        "Defecto": "com", "Reino Unido": "co.uk", "Estados Unidos": "com",
-        "Australia": "com.au", "Irlanda": "ie", "Sudáfrica": "co.za", "España": "es"
-    }
-
-    input_language = lang_map.get(in_lang, "en")
-    output_language = lang_map.get(out_lang, "es")
-    tld = tld_map.get(accent, "com")
-
-    def text_to_speech(input_language, output_language, text, tld):
-        translation = translator.translate(text, src=input_language, dest=output_language)
-        trans_text = translation.text
-        tts = gTTS(trans_text, lang=output_language, tld=tld, slow=False)
-        my_file_name = text[:20] if text else "audio"
-        tts.save(f"temp/{my_file_name}.mp3")
-        return my_file_name, trans_text
-
-    display_output_text = st.checkbox("Mostrar texto traducido")
-
-    if st.button("✨ Convertir a Audio"):
-        result, output_text = text_to_speech(input_language, output_language, text, tld)
+# BOTÓN PARA CONVERTIR
+if st.button("Convertir a Audio"):
+    if text.strip() == "":
+        st.warning("Escribe algo antes de convertir.")
+    else:
+        result, output_text = text_to_speech(text, tld, lg)
         audio_file = open(f"temp/{result}.mp3", "rb")
         audio_bytes = audio_file.read()
-        st.markdown("#### 🎧 Audio generado:")
+
+        st.markdown("## Tu audio listo:")
         st.audio(audio_bytes, format="audio/mp3", start_time=0)
 
-        if display_output_text:
-            st.markdown("#### 💬 Texto traducido:")
-            st.info(output_text)
+        # DESCARGA DEL AUDIO
+        with open(f"temp/{result}.mp3", "rb") as f:
+            data = f.read()
 
-    def remove_files(n):
-        mp3_files = glob.glob("temp/*.mp3")
+        bin_str = base64.b64encode(data).decode()
+        href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(result)}.mp3">Descargar tu audio</a>'
+        st.markdown(href, unsafe_allow_html=True)
+
+# LIMPIEZA DE ARCHIVOS TEMPORALES
+def remove_files(n):
+    mp3_files = glob.glob("temp/*.mp3")
+    if len(mp3_files) != 0:
         now = time.time()
         n_days = n * 86400
         for f in mp3_files:
             if os.stat(f).st_mtime < now - n_days:
                 os.remove(f)
 
-    remove_files(7)
+remove_files(7)
