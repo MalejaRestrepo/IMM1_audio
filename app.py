@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🎨 ESTILOS VISUALES (paleta del OCR: lavanda y azul pastel)
+# 🎨 ESTILOS ACTUALIZADOS (paleta lavanda-celeste del OCR + contraste correcto)
 st.markdown("""
     <style>
     /* Fondo general */
@@ -40,8 +40,8 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Párrafos y etiquetas */
-    p, li, label {
+    /* Textos generales */
+    p, li, label, span, div {
         color: #1f244b;
     }
 
@@ -55,7 +55,7 @@ st.markdown("""
         color: #1e1c3a !important;
     }
 
-    /* Botón */
+    /* Botón principal */
     div.stButton > button {
         background: linear-gradient(90deg, #b9a6ff 0%, #9be4ff 100%);
         color: #1f244b;
@@ -72,7 +72,7 @@ st.markdown("""
         transform: translateY(-1px);
     }
 
-    /* Inputs */
+    /* Inputs y selects claros */
     textarea, .stTextInput input {
         background-color: #ffffff !important;
         color: #1f244b !important;
@@ -82,14 +82,26 @@ st.markdown("""
     textarea::placeholder, .stTextInput input::placeholder {
         color: #6b7a9e !important;
     }
+
+    /* --- ÁREAS OSCURAS (SELECTS / FILE UPLOADER) --- */
     div[data-baseweb="select"] {
-        background-color: #ffffff !important;
-        color: #1f244b !important;
+        background-color: #2b2b33 !important;
+        color: #ffffff !important;
         border-radius: 10px !important;
-        border: 1px solid #a8c7ff !important;
+        border: 1px solid #3c3c4a !important;
     }
     div[data-baseweb="select"] * {
-        color: #1f244b !important;
+        color: #ffffff !important;
+    }
+
+    [data-testid="stFileUploader"] div {
+        background-color: #2b2b33 !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] span,
+    [data-testid="stFileUploader"] button {
+        color: #ffffff !important;
     }
 
     /* Enlaces */
