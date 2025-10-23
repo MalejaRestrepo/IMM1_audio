@@ -14,29 +14,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ESTILOS ACTUALIZADOS (fondo claro + texto oscuro)
+# ESTILOS ACTUALIZADOS (lavanda y violeta suave)
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(180deg, #f9faff 0%, #eef4ff 100%);
-        color: #1e2a44;
+        background: linear-gradient(180deg, #f4e8ff 0%, #ede2ff 100%);
+        color: #2b144b;
         font-family: 'Poppins', sans-serif;
     }
 
     h1, h2, h3 {
-        color: #253a66;
+        color: #5a2b8a;
         text-align: center;
         font-family: 'Poppins', sans-serif;
     }
 
     section[data-testid="stSidebar"] {
-        background-color: #f5ecff;
-        border-right: 2px solid #d8c8ff;
-        color: #2a1d5c;
+        background-color: #f1e4ff;
+        border-right: 2px solid #d3b6ff;
+        color: #3a1e65;
     }
 
     div.stButton > button {
-        background-color: #d7a8ff;
+        background-color: #c69aff;
         color: white;
         font-weight: bold;
         border-radius: 10px;
@@ -48,38 +48,38 @@ st.markdown("""
     }
 
     div.stButton > button:hover {
-        background-color: #b875ff;
+        background-color: #a66bff;
         transform: scale(1.05);
     }
 
     textarea {
         background-color: #ffffff !important;
-        color: #1e2a44 !important;
+        color: #2b144b !important;
         border-radius: 10px !important;
-        border: 1px solid #c4c4c4 !important;
+        border: 1px solid #c9a8ff !important;
     }
 
     div[data-baseweb="select"] {
         background-color: #ffffff !important;
-        color: #1e2a44 !important;
+        color: #2b144b !important;
         border-radius: 10px;
         border: 1px solid #bcbcbc;
     }
 
     a {
-        color: #6b3db5;
+        color: #7a41c9;
         font-weight: 600;
         text-decoration: none;
-        border-bottom: 1px dotted #6b3db5;
+        border-bottom: 1px dotted #7a41c9;
     }
 
     a:hover {
-        color: #452a80;
+        color: #552d91;
     }
 
     audio {
         border-radius: 10px;
-        border: 2px solid #c5a3ff;
+        border: 2px solid #b48aff;
     }
     </style>
 """, unsafe_allow_html=True)
