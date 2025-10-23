@@ -14,69 +14,98 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ESTILOS ACTUALIZADOS (lavanda y violeta suave)
+# ESTILOS: lavanda/violeta con alto contraste y sin texto blanco sobre claro
 st.markdown("""
     <style>
+    /* Fondo general (un poco más oscuro para mejor contraste) */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(180deg, #f4e8ff 0%, #ede2ff 100%);
-        color: #2b144b;
+        background: linear-gradient(180deg, #e8dcff 0%, #d7c4ff 100%);
+        color: #22143d; /* texto principal oscuro */
         font-family: 'Poppins', sans-serif;
     }
 
+    /* Card central para contenido: fondo claro encima del degradado */
+    .block-container {
+        background: #faf7ff;         /* claro, no blanco puro */
+        border: 1px solid #cbb3ff;   /* sutil */
+        border-radius: 16px;
+        padding: 2rem 2.2rem;
+        box-shadow: 0 10px 24px rgba(34, 20, 61, 0.12);
+    }
+
+    /* Encabezados */
     h1, h2, h3 {
-        color: #5a2b8a;
+        color: #3b2168;              /* violeta oscuro legible */
         text-align: center;
-        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
     }
 
+    /* Párrafos y listas */
+    p, li, label {
+        color: #22143d;
+    }
+
+    /* Sidebar con mejor contraste */
     section[data-testid="stSidebar"] {
-        background-color: #f1e4ff;
-        border-right: 2px solid #d3b6ff;
-        color: #3a1e65;
+        background: #efe6ff;
+        border-right: 2px solid #c9b1ff;
+        color: #2a1d5c;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #2a1d5c !important;
     }
 
+    /* Botón: fondo violeta más oscuro, texto claro permitido (bg oscuro) */
     div.stButton > button {
-        background-color: #c69aff;
-        color: white;
-        font-weight: bold;
+        background-color: #8b6aff;   /* más oscuro */
+        color: #ffffff;               /* OK porque el fondo del botón es oscuro */
+        font-weight: 700;
         border-radius: 10px;
-        border: none;
-        box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+        border: 1px solid #6f51ea;
+        box-shadow: 0 6px 14px rgba(34, 20, 61, 0.18);
         font-size: 16px;
-        padding: 8px 24px;
-        transition: all 0.3s ease;
+        padding: 9px 24px;
+        transition: all 0.2s ease;
     }
-
     div.stButton > button:hover {
-        background-color: #a66bff;
-        transform: scale(1.05);
+        background-color: #6f51ea;
+        transform: translateY(-1px);
     }
 
-    textarea {
+    /* Textarea y Select: fondo claro y texto oscuro */
+    textarea, .stTextInput input {
         background-color: #ffffff !important;
-        color: #2b144b !important;
+        color: #22143d !important;
         border-radius: 10px !important;
-        border: 1px solid #c9a8ff !important;
+        border: 1px solid #bda5ff !important;
     }
-
+    textarea::placeholder, .stTextInput input::placeholder {
+        color: #6b5a8e !important; /* placeholder más visible */
+    }
+    /* Select (Baseweb) */
     div[data-baseweb="select"] {
         background-color: #ffffff !important;
-        color: #2b144b !important;
-        border-radius: 10px;
-        border: 1px solid #bcbcbc;
+        color: #22143d !important;
+        border-radius: 10px !important;
+        border: 1px solid #bda5ff !important;
+    }
+    /* Texto interno del select */
+    div[data-baseweb="select"] * {
+        color: #22143d !important;
     }
 
+    /* Enlaces (descarga) */
     a {
-        color: #7a41c9;
+        color: #5a3ccf;
         font-weight: 600;
         text-decoration: none;
-        border-bottom: 1px dotted #7a41c9;
+        border-bottom: 1px dotted #5a3ccf;
     }
-
     a:hover {
-        color: #552d91;
+        color: #3f2aa0;
     }
 
+    /* Reproductor de audio */
     audio {
         border-radius: 10px;
         border: 2px solid #b48aff;
@@ -118,9 +147,9 @@ except:
 
 # TEXTO DE EJEMPLO
 st.markdown("### Ejemplo de texto:")
-st.write("""You shine so bright, like city lights,  
-Every word you say feels right.  
-Let the music play, don't say goodbye,  
+st.write("""You shine so bright, like city lights,
+Every word you say feels right.
+Let the music play, don't say goodbye,
 My heart’s alive when you’re nearby.""")
 
 # ÁREA DE TEXTO
