@@ -14,20 +14,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ESTILOS: lavanda/violeta con alto contraste y sin texto blanco sobre claro
+# ESTILOS ACTUALIZADOS (lavanda/violeta con barra superior personalizada)
 st.markdown("""
     <style>
-    /* Fondo general (un poco más oscuro para mejor contraste) */
+    /* Fondo general */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(180deg, #e8dcff 0%, #d7c4ff 100%);
-        color: #22143d; /* texto principal oscuro */
+        color: #22143d;
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Card central para contenido: fondo claro encima del degradado */
+    /* Card central */
     .block-container {
-        background: #faf7ff;         /* claro, no blanco puro */
-        border: 1px solid #cbb3ff;   /* sutil */
+        background: #faf7ff;
+        border: 1px solid #cbb3ff;
         border-radius: 16px;
         padding: 2rem 2.2rem;
         box-shadow: 0 10px 24px rgba(34, 20, 61, 0.12);
@@ -35,17 +35,17 @@ st.markdown("""
 
     /* Encabezados */
     h1, h2, h3 {
-        color: #3b2168;              /* violeta oscuro legible */
+        color: #3b2168;
         text-align: center;
         font-weight: 700;
     }
 
-    /* Párrafos y listas */
+    /* Párrafos y etiquetas */
     p, li, label {
         color: #22143d;
     }
 
-    /* Sidebar con mejor contraste */
+    /* Sidebar */
     section[data-testid="stSidebar"] {
         background: #efe6ff;
         border-right: 2px solid #c9b1ff;
@@ -55,10 +55,10 @@ st.markdown("""
         color: #2a1d5c !important;
     }
 
-    /* Botón: fondo violeta más oscuro, texto claro permitido (bg oscuro) */
+    /* Botón */
     div.stButton > button {
-        background-color: #8b6aff;   /* más oscuro */
-        color: #ffffff;               /* OK porque el fondo del botón es oscuro */
+        background-color: #8b6aff;
+        color: #ffffff;
         font-weight: 700;
         border-radius: 10px;
         border: 1px solid #6f51ea;
@@ -72,7 +72,7 @@ st.markdown("""
         transform: translateY(-1px);
     }
 
-    /* Textarea y Select: fondo claro y texto oscuro */
+    /* Inputs */
     textarea, .stTextInput input {
         background-color: #ffffff !important;
         color: #22143d !important;
@@ -80,21 +80,19 @@ st.markdown("""
         border: 1px solid #bda5ff !important;
     }
     textarea::placeholder, .stTextInput input::placeholder {
-        color: #6b5a8e !important; /* placeholder más visible */
+        color: #6b5a8e !important;
     }
-    /* Select (Baseweb) */
     div[data-baseweb="select"] {
         background-color: #ffffff !important;
         color: #22143d !important;
         border-radius: 10px !important;
         border: 1px solid #bda5ff !important;
     }
-    /* Texto interno del select */
     div[data-baseweb="select"] * {
         color: #22143d !important;
     }
 
-    /* Enlaces (descarga) */
+    /* Enlaces */
     a {
         color: #5a3ccf;
         font-weight: 600;
@@ -109,6 +107,20 @@ st.markdown("""
     audio {
         border-radius: 10px;
         border: 2px solid #b48aff;
+    }
+
+    /* BARRA SUPERIOR de Streamlit */
+    [data-testid="stHeader"] {
+        background: linear-gradient(90deg, #5a3ccf 0%, #7b59e3 100%) !important;
+        color: white !important;
+        height: 3.5rem;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    [data-testid="stToolbar"] {
+        right: 1rem;
+        top: 0.5rem;
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
